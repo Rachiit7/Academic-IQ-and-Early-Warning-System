@@ -63,39 +63,40 @@ Automated academic status alerts:
 
 # Project Structure
 Murari/
-├── app.py                        ** Flask app + all routes
-├── database.py                   ** Schema creation + seed data
-├── models.py                     ** Query helpers (attendance %, marks %, status)
+├── app.py                        # Flask app + all routes
+├── database.py                   # Schema creation + seed data
+├── models.py                     # Query helpers (attendance %, marks %, status)
 ├── requirements.txt
-├── academic.db                   ** SQLite database (auto-created on first run)
+├── academic.db                   # SQLite database (auto-created on first run)
 │
 ├── static/
 │   ├── css/
-│   │   └── style.css             ** Full design system (dark theme, glassmorphism)
+│   │   └── style.css             # Full design system (dark theme, glassmorphism)
 │   └── js/
-│       └── charts.js             ** Chart.js wrappers, modals, animations
+│       └── charts.js             # Chart.js wrappers, modals, animations
 │
 └── templates/
-    ├── base.html                 ** Layout shell — sidebar, topbar, flash messages
+    ├── base.html                 # Layout shell — sidebar, topbar, flash messages
     ├── login.html
     ├── forgot_password.html
     ├── reset_password.html
     ├── student/
-    │   ├── dashboard.html        ** Status banner, 3 charts, subject cards
-    │   ├── attendance.html       ** Subject cards + history table
-    │   ├── marks.html            ** Avg cards + bar chart + test records
-    │   └── alerts.html           ** Compliance tables + shortfall calculator
+    │   ├── dashboard.html        # Status banner, 3 charts, subject cards
+    │   ├── attendance.html       # Subject cards + history table
+    │   ├── marks.html            # Avg cards + bar chart + test records
+    │   └── alerts.html           # Compliance tables + shortfall calculator
     ├── faculty/
-    │   ├── dashboard.html        ** Stats, charts, student risk table
-    │   ├── attendance.html       ** P/A/L radio form + quick fill
-    │   ├── marks.html            ** Create test modal + inline score entry
-    │   ├── attentiveness.html    ** Star rating (1–5) + notes per student
-    │   └── red_zone.html         ** Detailed at-risk student cards
+    │   ├── dashboard.html        # Stats, charts, student risk table
+    │   ├── attendance.html       # P/A/L radio form + quick fill
+    │   ├── marks.html            # Create test modal + inline score entry
+    │   ├── attentiveness.html    # Star rating (1–5) + notes per student
+    │   └── red_zone.html         # Detailed at-risk student cards
     └── admin/
-        ├── dashboard.html        ** System stats + charts + student table
-        ├── users.html            ** CRUD users (add/edit/delete modals)
-        ├── subjects.html         ** Subject management + faculty assignment
-        └── analytics.html        ** System-wide charts + performance report
+        ├── dashboard.html        # System stats + charts + student table
+        ├── users.html            # CRUD users (add/edit/delete modals)
+        ├── subjects.html         # Subject management + faculty assignment
+        └── analytics.html        # System-wide charts + performance report
+---
 
 # Getting Started
 
