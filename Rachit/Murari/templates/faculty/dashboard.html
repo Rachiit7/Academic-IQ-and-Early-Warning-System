@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Faculty Dashboard{% endblock %}
+{% block page_title %}Faculty Dashboard{% endblock %}
+{% block page_subtitle %}Class overview and risk monitoring{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stat-grid anim-1">
+  <div class="stat-card">
+    <div class="stat-icon indigo">📚</div>
+    <div>
+      <div class="stat-value" data-target="{{ subjects | length }}">0</div>
+      <div class="stat-label">My Subjects</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success">👨‍🎓</div>
+    <div>
+      <div class="stat-value" data-target="{{ all_students | length }}">0</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning">⚠️</div>
+    <div>
+      <div class="stat-value" data-target="{{ warning | length }}">0</div>
+      <div class="stat-label">Warning Zone</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon danger">🔴</div>
+    <div>
+      <div class="stat-value" data-target="{{ red_zone | length }}">0</div>
+      <div class="stat-label">Red Zone (Critical)</div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-grid anim-2">
+  <!-- Student status chart -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Student Risk Distribution</div>
+    </div>
+    <div class="chart-container" style="height:260px;">
+      <canvas id="status-chart"></canvas>
+    </div>
+  </div>
+  <!-- Attendance comparison -->
+  <div class="card" style="grid-column: span 2;">
+    <div class="card-header">
+      <div class="card-title">Student Performance Comparison</div>
+      <div class="card-sub">Avg attendance vs avg marks per student</div>
+    </div>
+    <div class="chart-container" style="height:260px;">
+      <canvas id="compare-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- My subjects -->
+<div class="section-title anim-3">My Subjects</div>
+<div class="subject-grid anim-3">
+  {% for s in subjects %}
+  <div class="subject-card border-safe">
+    <div class="subject-code">{{ s.code }}</div>
+    <div class="subject-name">{{ s.name }}</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+      <a href="{{ url_for('faculty_attendance', subject_id=s.id) }}" class="btn btn-ghost btn-sm">📅 Attendance</a>
+      <a href="{{ url_for('faculty_marks') }}" class="btn btn-ghost btn-sm">📝 Marks</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Student risk table -->
+<div class="card anim-4">
+  <div class="card-header">
+    <div>
+      <div class="card-title">🎓 All Students — Risk Overview</div>
+    </div>
+    <a href="{{ url_for('faculty_red_zone') }}" class="btn btn-danger btn-sm">View Red Zone →</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Avg Attendance</th><th>Avg Marks</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for s in all_students %}
+        <tr>
+          <td class="fw-semi">{{ s.name }}</td>
+          <td class="{{ 'text-danger' if s.avg_att < 75 else 'text-success' }}">{{ s.avg_att }}%</td>
+          <td class="{{ 'text-danger' if s.avg_marks < 40 else 'text-success' }}">{{ s.avg_marks }}%</td>
+          <td>
+            <span class="badge badge-{{ s.status }}">
+              {{ '🔴 Critical' if s.status=='critical' else '⚠️ Warning' if s.status=='warning' else '✅ Safe' }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/faculty/charts')
+  .then(r => r.json())
+  .then(d => {
+    // Status counts from server-rendered values
+    buildStatusChart('status-chart', {{ all_students | selectattr('status','equalto','safe') | list | length }},
+      {{ all_students | selectattr('status','equalto','warning') | list | length }},
+      {{ all_students | selectattr('status','equalto','critical') | list | length }});
+    buildStudentBar('compare-chart', d.students, d.attendance, d.marks);
+  });
+</script>
+{% endblock %}

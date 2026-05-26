@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Register — AcademIQ Early Warning System</title>
+  <meta name="description" content="Create your AcademIQ account as a student or faculty member."/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <script src="{{ url_for('static', filename='js/charts.js') }}" defer></script>
+  <style>
+    /* Role selector cards */
+    .role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .role-card {
+      border: 2px solid var(--border-muted);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      position: relative;
+    }
+    .role-card:hover { border-color: var(--indigo); background: rgba(99,102,241,0.06); }
+    .role-card input[type=radio] { position: absolute; opacity: 0; }
+    .role-card.selected { border-color: var(--indigo); background: rgba(99,102,241,0.12); }
+    .role-card .role-emoji { font-size: 28px; display: block; margin-bottom: 6px; }
+    .role-card .role-name  { font-size: 14px; font-weight: 600; }
+    .role-card .role-desc  { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    /* Password strength meter */
+    .strength-bar-wrap { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .strength-bar { height: 100%; border-radius: 2px; transition: width 0.3s ease, background 0.3s ease; width: 0%; }
+    .strength-label { font-size: 11px; margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<!-- Flash Messages -->
+<div class="flash-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">
+        <span>
+          {% if category == 'success' %}✅{% elif category == 'danger' %}🚨{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+          {{ message }}
+        </span>
+        <button class="flash-close">✕</button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+<div class="login-page">
+  <div class="login-card" style="max-width:480px;">
+
+    <!-- Header -->
+    <div class="login-logo">
+      <div class="logo-icon">🎓</div>
+      <div>
+        <div class="logo-text">AcademIQ</div>
+        <div class="logo-sub">Create your account</div>
+      </div>
+    </div>
+
+    <h1>Join AcademIQ</h1>
+    <p class="subtitle">Register as a student or faculty member to get started.</p>
+
+    <form method="POST" action="{{ url_for('register') }}" novalidate id="register-form" style="margin-top:24px;">
+
+      <!-- Role selector -->
+      <div class="form-group">
+        <label>I am a…</label>
+        <div class="role-selector">
+          <label class="role-card {% if form_role == 'student' %}selected{% endif %}" id="card-student">
+            <input type="radio" name="role" value="student"
+                   {{ 'checked' if form_role == 'student' else '' }}
+                   onchange="selectRole('student')"/>
+            <span class="role-emoji">👨‍🎓</span>
+            <div class="role-name">Student</div>
+            <div class="role-desc">Track my attendance & marks</div>
+          </label>
+          <label class="role-card {% if form_role == 'faculty' %}selected{% endif %}" id="card-faculty">
+            <input type="radio" name="role" value="faculty"
+                   {{ 'checked' if form_role == 'faculty' else '' }}
+                   onchange="selectRole('faculty')"/>
+            <span class="role-emoji">👩‍🏫</span>
+            <div class="role-name">Faculty</div>
+            <div class="role-desc">Manage my class & record data</div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Full Name -->
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input id="name" type="text" name="name" class="form-control"
+               placeholder="e.g. Alice Johnson"
+               value="{{ form_name }}"
+               required minlength="2" autocomplete="name"/>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input id="email" type="email" name="email" class="form-control"
+               placeholder="you@school.edu"
+               value="{{ form_email }}"
+               required autocomplete="email"/>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" type="password" name="password" class="form-control"
+               placeholder="Min 6 characters"
+               required minlength="6"
+               autocomplete="new-password"
+               oninput="checkStrength(this.value)"/>
+        <div class="strength-bar-wrap">
+          <div class="strength-bar" id="strength-bar"></div>
+        </div>
+        <div class="strength-label" id="strength-label" style="color:var(--text-muted);">
+          Enter a password
+        </div>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-group">
+        <label for="confirm">Confirm Password</label>
+        <input id="confirm" type="password" name="confirm" class="form-control"
+               placeholder="Repeat password"
+               required
+               autocomplete="new-password"
+               oninput="checkMatch()"/>
+        <div class="pwd-hint" id="match-hint"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+        Create Account →
+      </button>
+    </form>
+
+    <hr class="divider"/>
+
+    <p style="text-align:center; font-size:13px; color:var(--text-muted);">
+      Already have an account?
+      <a href="{{ url_for('login') }}" style="color:var(--indigo-lt); font-weight:600;">Sign in</a>
+    </p>
+
+    <p style="text-align:center; margin-top:10px; font-size:12px; color:var(--text-muted);">
+      Admin accounts are created by the system administrator only.
+    </p>
+
+  </div>
+</div>
+
+<script>
+function selectRole(role) {
+  document.getElementById('card-student').classList.remove('selected');
+  document.getElementById('card-faculty').classList.remove('selected');
+  document.getElementById(`card-${role}`).classList.add('selected');
+}
+
+function checkStrength(val) {
+  const bar   = document.getElementById('strength-bar');
+  const label = document.getElementById('strength-label');
+  let score = 0;
+  if (val.length >= 6)  score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^a-zA-Z0-9]/.test(val)) score++;
+
+  const levels = [
+    { pct: 0,   color: 'transparent',       text: '' },
+    { pct: 20,  color: 'var(--danger)',      text: '🔴 Very weak' },
+    { pct: 40,  color: 'var(--warning)',     text: '🟡 Weak' },
+    { pct: 60,  color: '#eab308',            text: '🟠 Fair' },
+    { pct: 80,  color: 'var(--success)',     text: '🟢 Strong' },
+    { pct: 100, color: '#06b6d4',            text: '💎 Very strong' },
+  ];
+  const l = levels[Math.min(score, 5)];
+  bar.style.width    = l.pct + '%';
+  bar.style.background = l.color;
+  label.textContent  = l.text;
+  label.style.color  = l.color;
+}
+
+function checkMatch() {
+  const pwd     = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm').value;
+  const hint    = document.getElementById('match-hint');
+  if (!confirm) { hint.textContent = ''; return; }
+  if (pwd === confirm) {
+    hint.textContent = '✅ Passwords match';
+    hint.style.color = 'var(--success)';
+  } else {
+    hint.textContent = '❌ Passwords do not match';
+    hint.style.color = 'var(--danger)';
+  }
+}
+</script>
+
+</body>
+</html>

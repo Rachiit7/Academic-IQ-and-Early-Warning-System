@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Subject Management{% endblock %}
+{% block page_title %}Subject Management{% endblock %}
+{% block page_subtitle %}Manage subjects and faculty assignments{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:flex-end; margin-bottom:20px;" class="anim-1">
+  <button class="btn btn-primary" data-modal-open="add-subject-modal">➕ Add Subject</button>
+</div>
+
+<div class="card anim-2">
+  <div class="card-header">
+    <div class="card-title">📚 All Subjects</div>
+    <span class="badge badge-info">{{ subjects | length }} subjects</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Subject Name</th>
+          <th>Code</th>
+          <th>Assigned Faculty</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in subjects %}
+        <tr>
+          <td class="text-muted">{{ loop.index }}</td>
+          <td class="fw-semi">{{ s.name }}</td>
+          <td><span class="badge badge-info">{{ s.code }}</span></td>
+          <td class="text-muted">{{ s.faculty_name or '—' }}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-ghost btn-sm"
+                onclick="openEditSubject({{ s.id }}, '{{ s.name }}', '{{ s.code }}', {{ s.faculty_id or 'null' }})">
+                ✏️ Edit
+              </button>
+              <form method="POST" action="{{ url_for('admin_subjects') }}" style="display:inline;"
+                    onsubmit="return confirm('Delete subject {{ s.name }}? All related data will be removed.')">
+                <input type="hidden" name="action" value="delete"/>
+                <input type="hidden" name="subject_id" value="{{ s.id }}"/>
+                <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Subject Modal -->
+<div class="modal-overlay" id="add-subject-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ Add Subject</div>
+      <button class="modal-close" data-modal-close>✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin_subjects') }}">
+      <input type="hidden" name="action" value="add"/>
+      <div class="form-group">
+        <label>Subject Name</label>
+        <input type="text" name="name" class="form-control" placeholder="e.g. Mathematics" required/>
+      </div>
+      <div class="form-group">
+        <label>Subject Code</label>
+        <input type="text" name="code" class="form-control" placeholder="e.g. MATH101" required/>
+      </div>
+      <div class="form-group">
+        <label>Assign Faculty <span class="text-muted">(optional)</span></label>
+        <select name="faculty_id" class="form-control">
+          <option value="">— Unassigned —</option>
+          {% for f in faculty %}
+          <option value="{{ f.id }}">{{ f.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Add Subject</button>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Subject Modal -->
+<div class="modal-overlay" id="edit-subject-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Subject</div>
+      <button class="modal-close" data-modal-close>✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('admin_subjects') }}">
+      <input type="hidden" name="action" value="edit"/>
+      <input type="hidden" name="subject_id" id="edit-subject-id"/>
+      <div class="form-group">
+        <label>Subject Name</label>
+        <input type="text" name="name" id="edit-subject-name" class="form-control" required/>
+      </div>
+      <div class="form-group">
+        <label>Subject Code</label>
+        <input type="text" name="code" id="edit-subject-code" class="form-control" required/>
+      </div>
+      <div class="form-group">
+        <label>Assign Faculty</label>
+        <select name="faculty_id" id="edit-faculty-id" class="form-control">
+          <option value="">— Unassigned —</option>
+          {% for f in faculty %}
+          <option value="{{ f.id }}">{{ f.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openEditSubject(id, name, code, facultyId) {
+  document.getElementById('edit-subject-id').value   = id;
+  document.getElementById('edit-subject-name').value = name;
+  document.getElementById('edit-subject-code').value = code;
+  const sel = document.getElementById('edit-faculty-id');
+  sel.value = facultyId || '';
+  document.getElementById('edit-subject-modal').classList.add('open');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Red Zone{% endblock %}
+{% block page_title %}Red Zone Monitor{% endblock %}
+{% block page_subtitle %}Students requiring immediate academic intervention{% endblock %}
+
+{% block content %}
+{% set critical_students = detailed | selectattr('status', 'equalto', 'critical') | list %}
+{% set warning_students  = detailed | selectattr('status', 'equalto', 'warning')  | list %}
+
+{% if not detailed %}
+<div class="alert-banner alert-safe anim-1" style="margin-bottom:0;">
+  <span class="alert-banner-icon">✅</span>
+  <div>
+    <div class="alert-banner-title">No At-Risk Students</div>
+    <div class="alert-banner-body">All students are within acceptable attendance and marks thresholds. Great work!</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Critical (Red Zone) -->
+{% if critical_students %}
+<div class="section-title anim-1" style="color:var(--danger);">🔴 Critical — Red Zone Students ({{ critical_students | length }})</div>
+{% for s in critical_students %}
+<div class="risk-card anim-2">
+  <div class="risk-card-header critical">
+    <div style="width:42px;height:42px;border-radius:50%;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--danger);flex-shrink:0;">
+      {{ s.name[0] }}
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:700;">{{ s.name }}</div>
+      <div style="font-size:12px;color:var(--text-secondary);">{{ s.email }}</div>
+    </div>
+    <span class="badge badge-critical">🔴 Critical</span>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:var(--text-muted);">Avg Attendance</div>
+      <div style="font-size:20px;font-weight:800;color:var(--danger);">{{ s.avg_att }}%</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:var(--text-muted);">Avg Marks</div>
+      <div style="font-size:20px;font-weight:800;color:var(--danger);">{{ s.avg_marks }}%</div>
+    </div>
+  </div>
+  <div class="risk-card-body">
+    <div class="form-row" style="gap:24px;">
+      <!-- Attendance -->
+      <div>
+        <div class="section-title">📅 Subject Attendance</div>
+        {% for a in s.attendance %}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:500;width:160px;flex-shrink:0;">{{ a.subject_name }}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:50px;height:7px;overflow:hidden;">
+            <div style="height:100%;width:{{ a.percentage }}%;background:{{ 'var(--danger)' if a.warning else 'var(--success)' }};border-radius:50px;transition:width 0.8s ease;"></div>
+          </div>
+          <div style="font-size:13px;font-weight:700;width:45px;text-align:right;color:{{ 'var(--danger)' if a.warning else 'var(--success)' }};">{{ a.percentage }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+      <!-- Marks -->
+      <div>
+        <div class="section-title">📝 Subject Marks</div>
+        {% for m in s.marks %}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:500;width:160px;flex-shrink:0;">{{ m.subject_name }}</div>
+          <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:50px;height:7px;overflow:hidden;">
+            <div style="height:100%;width:{{ m.percentage }}%;background:{{ 'var(--danger)' if m.warning else 'var(--success)' }};border-radius:50px;transition:width 0.8s ease;"></div>
+          </div>
+          <div style="font-size:13px;font-weight:700;width:45px;text-align:right;color:{{ 'var(--danger)' if m.warning else 'var(--success)' }};">{{ m.percentage }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+      <!-- Attentiveness -->
+      <div>
+        <div class="section-title">👁️ Attentiveness</div>
+        {% for a in s.attentive %}
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:13px;">{{ a.subject_name }}</div>
+          <div>
+            <span class="att-stars">{% for i in range(1,6) %}{{ '★' if i<=a.avg_score|round else '☆' }}{% endfor %}</span>
+            <span class="att-score-number"> {{ a.avg_score }}/5</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Warning zone -->
+{% if warning_students %}
+<div class="section-title anim-3" style="color:var(--warning); margin-top:32px;">⚠️ Warning Zone Students ({{ warning_students | length }})</div>
+{% for s in warning_students %}
+<div class="risk-card anim-4">
+  <div class="risk-card-header warning">
+    <div style="width:42px;height:42px;border-radius:50%;background:var(--warning-bg);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--warning);flex-shrink:0;">
+      {{ s.name[0] }}
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:700;">{{ s.name }}</div>
+      <div style="font-size:12px;color:var(--text-secondary);">{{ s.email }}</div>
+    </div>
+    <span class="badge badge-warning">⚠️ Warning</span>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:var(--text-muted);">Avg Attendance</div>
+      <div style="font-size:20px;font-weight:800;color:var(--warning);">{{ s.avg_att }}%</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:var(--text-muted);">Avg Marks</div>
+      <div style="font-size:20px;font-weight:800;color:var(--warning);">{{ s.avg_marks }}%</div>
+    </div>
+  </div>
+  <div class="risk-card-body">
+    <div class="form-row">
+      <div>
+        <div class="section-title">📅 Attendance Issues</div>
+        {% for a in s.attendance if a.warning %}
+        <div style="margin-bottom:6px; font-size:13px;">
+          ⚠ <strong>{{ a.subject_name }}</strong> — {{ a.percentage }}% ({{ a.absent }} absences)
+        </div>
+        {% else %}
+        <div class="text-muted small">No attendance issues</div>
+        {% endfor %}
+      </div>
+      <div>
+        <div class="section-title">📝 Marks Issues</div>
+        {% for m in s.marks if m.warning %}
+        <div style="margin-bottom:6px; font-size:13px;">
+          ⚠ <strong>{{ m.subject_name }}</strong> — {{ m.percentage }}%
+        </div>
+        {% else %}
+        <div class="text-muted small">No marks issues</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

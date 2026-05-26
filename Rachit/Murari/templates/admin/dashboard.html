@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block page_subtitle %}System-wide academic overview{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stat-grid anim-1">
+  <div class="stat-card">
+    <div class="stat-icon indigo">👨‍🎓</div>
+    <div>
+      <div class="stat-value" data-target="{{ stats.students }}">0</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon info">👩‍🏫</div>
+    <div>
+      <div class="stat-value" data-target="{{ stats.faculty }}">0</div>
+      <div class="stat-label">Faculty Members</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success">📚</div>
+    <div>
+      <div class="stat-value" data-target="{{ stats.subjects }}">0</div>
+      <div class="stat-label">Subjects</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning">📝</div>
+    <div>
+      <div class="stat-value" data-target="{{ stats.tests }}">0</div>
+      <div class="stat-label">Tests Conducted</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon success">✅</div>
+    <div>
+      <div class="stat-value" data-target="{{ safe }}">0</div>
+      <div class="stat-label">Safe Students</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon warning">⚠️</div>
+    <div>
+      <div class="stat-value" data-target="{{ warning }}">0</div>
+      <div class="stat-label">Warning Zone</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon danger">🔴</div>
+    <div>
+      <div class="stat-value" data-target="{{ critical }}">0</div>
+      <div class="stat-label">Red Zone (Critical)</div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-grid anim-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title">Risk Distribution</div></div>
+    <div class="chart-container" style="height:280px;">
+      <canvas id="status-chart"></canvas>
+    </div>
+  </div>
+  <div class="card" style="grid-column:span 2;">
+    <div class="card-header">
+      <div class="card-title">Student Performance Comparison</div>
+      <div class="card-sub">Avg attendance & marks per student</div>
+    </div>
+    <div class="chart-container" style="height:280px;">
+      <canvas id="compare-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- All Students Table -->
+<div class="card anim-3">
+  <div class="card-header">
+    <div class="card-title">🎓 All Students — Status Overview</div>
+    <div style="display:flex; gap:8px;">
+      <a href="{{ url_for('admin_users') }}" class="btn btn-ghost btn-sm">Manage Users</a>
+      <a href="{{ url_for('admin_analytics') }}" class="btn btn-primary btn-sm">Full Analytics →</a>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Email</th><th>Avg Attendance</th><th>Avg Marks</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td class="fw-semi">{{ s.name }}</td>
+          <td class="text-muted small">{{ s.email }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:50px;height:6px;overflow:hidden;min-width:80px;">
+                <div style="height:100%;width:{{ s.avg_att }}%;background:{{ 'var(--danger)' if s.avg_att<75 else 'var(--success)' }};border-radius:50px;"></div>
+              </div>
+              <span class="{{ 'text-danger' if s.avg_att < 75 else 'text-success' }} fw-semi" style="min-width:40px;">{{ s.avg_att }}%</span>
+            </div>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="flex:1;background:rgba(255,255,255,0.06);border-radius:50px;height:6px;overflow:hidden;min-width:80px;">
+                <div style="height:100%;width:{{ s.avg_marks }}%;background:{{ 'var(--danger)' if s.avg_marks<40 else 'var(--success)' }};border-radius:50px;"></div>
+              </div>
+              <span class="{{ 'text-danger' if s.avg_marks < 40 else 'text-success' }} fw-semi" style="min-width:40px;">{{ s.avg_marks }}%</span>
+            </div>
+          </td>
+          <td>
+            <span class="badge badge-{{ s.status }}">
+              {{ '🔴 Critical' if s.status=='critical' else '⚠️ Warning' if s.status=='warning' else '✅ Safe' }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+buildStatusChart('status-chart', {{ safe }}, {{ warning }}, {{ critical }});
+fetch('/api/admin/charts')
+  .then(r => r.json())
+  .then(d => buildStudentBar('compare-chart', d.students, d.attendance, d.marks));
+</script>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+{% block page_subtitle %}Your academic performance overview{% endblock %}
+
+{% block content %}
+{% set low_att   = att_summary | selectattr('warning') | list %}
+{% set low_marks = avg_marks   | selectattr('warning') | list %}
+
+<!-- Status Banner -->
+{% if status == 'critical' %}
+<div class="alert-banner alert-critical anim-1">
+  <span class="alert-banner-icon">🔴</span>
+  <div>
+    <div class="alert-banner-title">Critical Alert — Red Zone</div>
+    <div class="alert-banner-body">
+      Your attendance AND marks are below acceptable thresholds. Immediate action is required.
+      Please contact your faculty or academic advisor today.
+    </div>
+  </div>
+</div>
+{% elif status == 'warning' %}
+<div class="alert-banner alert-warning anim-1">
+  <span class="alert-banner-icon">⚠️</span>
+  <div>
+    <div class="alert-banner-title">Performance Warning</div>
+    <div class="alert-banner-body">
+      One or more subjects need your attention. Review the details below and take corrective action.
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert-banner alert-safe anim-1">
+  <span class="alert-banner-icon">✅</span>
+  <div>
+    <div class="alert-banner-title">All Good — Keep It Up!</div>
+    <div class="alert-banner-body">Your attendance and marks are within acceptable ranges. Stay consistent!</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Stats row -->
+<div class="stat-grid anim-2">
+  <div class="stat-card">
+    <div class="stat-icon indigo">📚</div>
+    <div>
+      <div class="stat-value" data-target="{{ att_summary | length }}">0</div>
+      <div class="stat-label">Subjects Enrolled</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {{ 'danger' if low_att else 'success' }}">📅</div>
+    <div>
+      <div class="stat-value" data-target="{{ (att_summary | sum(attribute='percentage') / att_summary|length) | round(1) if att_summary else 0 }}">0</div>
+      <div class="stat-label">Avg Attendance %</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {{ 'danger' if low_marks else 'success' }}">📝</div>
+    <div>
+      <div class="stat-value" data-target="{{ (avg_marks | sum(attribute='percentage') / avg_marks|length) | round(1) if avg_marks else 0 }}">0</div>
+      <div class="stat-label">Avg Marks %</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon {{ 'danger' if status=='critical' else 'warning' if status=='warning' else 'success' }}">
+      {{ '🔴' if status=='critical' else '⚠️' if status=='warning' else '🟢' }}
+    </div>
+    <div>
+      <div class="stat-value" style="font-size:18px; margin-top:4px;">
+        <span class="badge badge-{{ 'critical' if status=='critical' else 'warning' if status=='warning' else 'safe' }}">
+          {{ status | title }}
+        </span>
+      </div>
+      <div class="stat-label">Overall Status</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row -->
+<div class="chart-grid anim-3">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Attendance per Subject</div>
+        <div class="card-sub">Threshold: 75%</div>
+      </div>
+    </div>
+    <div class="chart-container" style="height:260px;">
+      <canvas id="att-chart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Marks per Subject</div>
+        <div class="card-sub">Threshold: 40%</div>
+      </div>
+    </div>
+    <div class="chart-container" style="height:260px;">
+      <canvas id="marks-chart"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Attentiveness Radar</div>
+        <div class="card-sub">Score 1–5 per subject</div>
+      </div>
+    </div>
+    <div class="chart-container" style="height:260px;">
+      <canvas id="radar-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Subject detail cards -->
+<div class="page-header anim-4">
+  <h1 style="font-size:17px;">Subject Breakdown</h1>
+</div>
+<div class="subject-grid anim-4">
+  {% for s in att_summary %}
+  {% set m = avg_marks | selectattr('subject_id', 'equalto', s.subject_id) | first %}
+  {% set cls = 'critical' if s.warning and (m and m.warning) else 'warning' if (s.warning or (m and m.warning)) else 'safe' %}
+  <div class="subject-card border-{{ cls }}">
+    <div class="subject-code">{{ s.subject_code }}</div>
+    <div class="subject-name">{{ s.subject_name }}</div>
+    <div class="d-flex gap-3 mb-2" style="margin-bottom:10px;">
+      <div>
+        <div style="font-size:11px; color:var(--text-muted);">Attendance</div>
+        <div style="font-size:20px; font-weight:800; color: {{ 'var(--danger)' if s.warning else 'var(--success)' }};">{{ s.percentage }}%</div>
+      </div>
+      {% if m %}
+      <div>
+        <div style="font-size:11px; color:var(--text-muted);">Marks</div>
+        <div style="font-size:20px; font-weight:800; color: {{ 'var(--danger)' if m.warning else 'var(--success)' }};">{{ m.percentage }}%</div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar {{ cls }}" data-pct="{{ s.percentage }}" style="width:0%"></div>
+    </div>
+    <div class="d-flex gap-2" style="margin-top:10px; gap:6px;">
+      <span class="badge badge-{{ 'warning' if s.warning else 'safe' }}">
+        {{ '⚠ Att' if s.warning else '✓ Att' }}
+      </span>
+      {% if m %}
+      <span class="badge badge-{{ 'warning' if m.warning else 'safe' }}">
+        {{ '⚠ Marks' if m.warning else '✓ Marks' }}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Attentiveness table -->
+<div class="card anim-5">
+  <div class="card-header">
+    <div class="card-title">👁️ Attentiveness Scores</div>
+    <div class="card-sub">Faculty-rated (1-5 per class)</div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Avg Score</th>
+          <th>Rating</th>
+          <th>Sessions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in attentive %}
+        <tr>
+          <td class="fw-semi">{{ a.subject_name }}</td>
+          <td>{{ a.avg_score }}</td>
+          <td>
+            <span class="att-stars">
+              {% for i in range(1, 6) %}{{ '★' if i <= a.avg_score | round else '☆' }}{% endfor %}
+            </span>
+          </td>
+          <td class="text-muted">{{ a.sessions }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/student/charts')
+  .then(r => r.json())
+  .then(d => {
+    buildSubjectBar('att-chart',   d.attendance.labels, d.attendance.data, 'Attendance %', 75);
+    buildSubjectBar('marks-chart', d.marks.labels,      d.marks.data,      'Marks %',       40);
+  });
+
+// Radar chart (attentiveness)
+const attLabels = {{ attentive | map(attribute='subject_name') | list | tojson }};
+const attData   = {{ attentive | map(attribute='avg_score')   | list | tojson }};
+buildRadar('radar-chart', attLabels, attData);
+</script>
+{% endblock %}

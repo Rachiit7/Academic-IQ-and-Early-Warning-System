@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Attentiveness{% endblock %}
+{% block page_title %}Student Attentiveness{% endblock %}
+{% block page_subtitle %}Rate student engagement per class session{% endblock %}
+
+{% block content %}
+<!-- Filter -->
+<div class="card anim-1" style="margin-bottom:24px;">
+  <div class="card-title" style="margin-bottom:16px;">Select Subject & Date</div>
+  <form method="GET" action="{{ url_for('faculty_attentiveness') }}" class="form-inline">
+    <div class="form-group">
+      <label for="subject_id">Subject</label>
+      <select id="subject_id" name="subject_id" class="form-control">
+        {% for s in subjects %}
+        <option value="{{ s.id }}" {{ 'selected' if s.id == sel_sub }}>{{ s.name }} ({{ s.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input id="date" type="date" name="date" class="form-control" value="{{ sel_date }}" max="{{ today }}"/>
+    </div>
+    <div class="form-group" style="align-self:flex-end;">
+      <button type="submit" class="btn btn-primary">Load</button>
+    </div>
+  </form>
+</div>
+
+<!-- Rating form -->
+<div class="card anim-2">
+  <div class="card-header">
+    <div>
+      <div class="card-title">👁️ Engagement Rating</div>
+      <div class="card-sub">Rate 1 (poor) to 5 (excellent) per student for {{ sel_date }}</div>
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('faculty_attentiveness') }}">
+    <input type="hidden" name="subject_id" value="{{ sel_sub }}"/>
+    <input type="hidden" name="att_date" value="{{ sel_date }}"/>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student</th>
+            <th>Rating (1–5)</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set ex = existing.get(s.id, {}) %}
+          {% set cur_score = ex.get('score', 3) %}
+          {% set cur_notes = ex.get('notes', '') %}
+          <tr>
+            <td class="text-muted">{{ loop.index }}</td>
+            <td class="fw-semi">{{ s.name }}</td>
+            <td>
+              <!-- Star rating using radio buttons -->
+              <div style="display:flex; gap:4px; direction:ltr;">
+                {% for i in range(1, 6) %}
+                <label style="cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                  <input type="radio" name="score_{{ s.id }}" value="{{ i }}"
+                         {{ 'checked' if cur_score == i }}
+                         style="display:none;"
+                         onchange="updateStar(this, {{ i }})"/>
+                  <span id="star_{{ s.id }}_{{ i }}"
+                        style="font-size:22px; color: {{ 'var(--warning)' if i <= cur_score else 'var(--text-muted)' }}; transition:color 0.15s;">★</span>
+                  <span style="font-size:10px; color:var(--text-muted);">{{ i }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </td>
+            <td>
+              <input type="text" name="notes_{{ s.id }}" class="form-control"
+                     value="{{ cur_notes }}" placeholder="Optional notes…"
+                     style="min-width:180px; padding:7px 12px; font-size:13px;"/>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:20px;">
+      <button type="submit" class="btn btn-primary">💾 Save Ratings</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateStar(radio, value) {
+  const studentId = radio.name.replace('score_', '');
+  for (let i = 1; i <= 5; i++) {
+    const star = document.getElementById(`star_${studentId}_${i}`);
+    if (star) star.style.color = i <= value ? 'var(--warning)' : 'var(--text-muted)';
+  }
+}
+</script>
+{% endblock %}

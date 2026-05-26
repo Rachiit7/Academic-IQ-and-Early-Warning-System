@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Record Attendance{% endblock %}
+{% block page_title %}Record Attendance{% endblock %}
+{% block page_subtitle %}Mark student presence for a subject & date{% endblock %}
+
+{% block content %}
+<!-- Filter bar -->
+<div class="card anim-1" style="margin-bottom:24px;">
+  <div class="card-title" style="margin-bottom:16px;">Select Subject & Date</div>
+  <form method="GET" action="{{ url_for('faculty_attendance') }}" class="form-inline">
+    <div class="form-group">
+      <label for="subject_id">Subject</label>
+      <select id="subject_id" name="subject_id" class="form-control">
+        {% for s in subjects %}
+        <option value="{{ s.id }}" {{ 'selected' if s.id == sel_sub }}>{{ s.name }} ({{ s.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="date">Date</label>
+      <input id="date" type="date" name="date" class="form-control" value="{{ sel_date }}" max="{{ today }}"/>
+    </div>
+    <div class="form-group" style="align-self:flex-end;">
+      <button type="submit" class="btn btn-primary">Load</button>
+    </div>
+  </form>
+</div>
+
+<!-- Attendance form -->
+{% if students %}
+<div class="card anim-2">
+  <div class="card-header">
+    <div>
+      <div class="card-title">📅 Attendance Sheet</div>
+      <div class="card-sub">{{ sel_date }} — P = Present, A = Absent, L = Late</div>
+    </div>
+    <span class="badge badge-info">{{ students | length }} students</span>
+  </div>
+
+  <form method="POST" action="{{ url_for('faculty_attendance') }}">
+    <input type="hidden" name="subject_id" value="{{ sel_sub }}"/>
+    <input type="hidden" name="att_date" value="{{ sel_date }}"/>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          {% set cur = existing.get(s.id, 'P') %}
+          <tr>
+            <td class="text-muted">{{ loop.index }}</td>
+            <td class="fw-semi">{{ s.name }}</td>
+            <td class="text-muted small">{{ s.email }}</td>
+            <td>
+              <div class="att-radio-group">
+                <input type="radio" id="p_{{ s.id }}" name="status_{{ s.id }}" value="P" {{ 'checked' if cur == 'P' }}>
+                <label for="p_{{ s.id }}" style="{{ 'background:var(--success);color:#fff;border-color:var(--success)' if cur=='P' else '' }}">✅ P</label>
+
+                <input type="radio" id="a_{{ s.id }}" name="status_{{ s.id }}" value="A" {{ 'checked' if cur == 'A' }}>
+                <label for="a_{{ s.id }}" style="{{ 'background:var(--danger);color:#fff;border-color:var(--danger)' if cur=='A' else '' }}">❌ A</label>
+
+                <input type="radio" id="l_{{ s.id }}" name="status_{{ s.id }}" value="L" {{ 'checked' if cur == 'L' }}>
+                <label for="l_{{ s.id }}" style="{{ 'background:var(--warning);color:#000;border-color:var(--warning)' if cur=='L' else '' }}">🕐 L</label>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:20px; display:flex; gap:12px;">
+      <button type="submit" class="btn btn-primary">💾 Save Attendance</button>
+      <!-- Quick fill buttons -->
+      <button type="button" class="btn btn-success btn-sm" onclick="markAll('P')">Mark All Present</button>
+      <button type="button" class="btn btn-danger btn-sm" onclick="markAll('A')">Mark All Absent</button>
+    </div>
+  </form>
+</div>
+{% else %}
+<div class="empty-state anim-2">
+  <div class="empty-icon">📋</div>
+  <p>No students found. Add students from the Admin panel.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function markAll(val) {
+  document.querySelectorAll(`input[type=radio][value=${val}]`).forEach(r => {
+    r.checked = true;
+  });
+}
+// Live label colour update on radio change
+document.querySelectorAll('.att-radio-group input[type=radio]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const group = radio.closest('.att-radio-group');
+    group.querySelectorAll('label').forEach(l => {
+      l.style.background = '';
+      l.style.color = '';
+      l.style.borderColor = '';
+    });
+    const lbl = group.querySelector(`label[for="${radio.id}"]`);
+    if (radio.value === 'P') { lbl.style.background='var(--success)'; lbl.style.color='#fff'; lbl.style.borderColor='var(--success)'; }
+    if (radio.value === 'A') { lbl.style.background='var(--danger)';  lbl.style.color='#fff'; lbl.style.borderColor='var(--danger)'; }
+    if (radio.value === 'L') { lbl.style.background='var(--warning)'; lbl.style.color='#000'; lbl.style.borderColor='var(--warning)'; }
+  });
+});
+</script>
+{% endblock %}

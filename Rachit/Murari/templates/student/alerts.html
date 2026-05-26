@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}My Alerts{% endblock %}
+{% block page_title %}My Alerts{% endblock %}
+{% block page_subtitle %}Early warning notifications for your account{% endblock %}
+
+{% block content %}
+<!-- Overall status -->
+{% if status == 'critical' %}
+<div class="alert-banner alert-critical anim-1">
+  <span class="alert-banner-icon">🔴</span>
+  <div>
+    <div class="alert-banner-title">CRITICAL ALERT — Red Zone Student</div>
+    <div class="alert-banner-body">
+      Both your attendance <strong>AND</strong> marks are critically low across multiple subjects.
+      You are at high risk of academic failure. Please contact your faculty advisor immediately.
+    </div>
+  </div>
+</div>
+{% elif status == 'warning' %}
+<div class="alert-banner alert-warning anim-1">
+  <span class="alert-banner-icon">⚠️</span>
+  <div>
+    <div class="alert-banner-title">Performance Warning</div>
+    <div class="alert-banner-body">
+      One or more of your subjects require immediate attention. Review the subject-specific alerts below.
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="alert-banner alert-safe anim-1">
+  <span class="alert-banner-icon">✅</span>
+  <div>
+    <div class="alert-banner-title">No Active Alerts — You're on track!</div>
+    <div class="alert-banner-body">Your attendance and marks are all within acceptable ranges. Keep it up!</div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Attendance alerts -->
+{% set low_att = att_summary | selectattr('warning') | list %}
+{% if low_att %}
+<div class="card anim-2" style="margin-bottom:20px; border-color: rgba(245,158,11,0.3);">
+  <div class="card-header">
+    <div>
+      <div class="card-title" style="color:var(--warning);">📅 Attendance Alerts</div>
+      <div class="card-sub">Subjects below the 75% attendance threshold</div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Attendance %</th><th>Present</th><th>Absent</th><th>Shortfall</th></tr></thead>
+      <tbody>
+        {% for s in low_att %}
+        <tr>
+          <td class="fw-semi">{{ s.subject_name }} <span class="text-muted small">({{ s.subject_code }})</span></td>
+          <td style="color:var(--danger); font-weight:700;">{{ s.percentage }}%</td>
+          <td>{{ s.present }}</td>
+          <td>{{ s.absent }}</td>
+          <td>
+            {% set shortfall = ((75 * s.total / 100) - s.present) | round(0, 'ceil') | int %}
+            <span class="badge badge-warning">Need {{ shortfall }} more class{{ 'es' if shortfall != 1 }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Marks alerts -->
+{% set low_marks = avg_marks | selectattr('warning') | list %}
+{% if low_marks %}
+<div class="card anim-3" style="margin-bottom:20px; border-color: rgba(239,68,68,0.3);">
+  <div class="card-header">
+    <div>
+      <div class="card-title" style="color:var(--danger);">📝 Marks Alerts</div>
+      <div class="card-sub">Subjects below the 40% marks threshold</div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Average Marks %</th><th>Obtained</th><th>Max</th></tr></thead>
+      <tbody>
+        {% for m in low_marks %}
+        <tr>
+          <td class="fw-semi">{{ m.subject_name }}</td>
+          <td style="color:var(--danger); font-weight:700;">{{ m.percentage }}%</td>
+          <td>{{ m.obtained | round(1) }}</td>
+          <td>{{ m.total_max | round(1) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Attentiveness alerts -->
+{% set low_att2 = attentive | selectattr('avg_score', 'lt', 3) | list %}
+{% if low_att2 %}
+<div class="card anim-4" style="border-color: rgba(56,189,248,0.2);">
+  <div class="card-header">
+    <div>
+      <div class="card-title" style="color:var(--info);">👁️ Attentiveness Alerts</div>
+      <div class="card-sub">Subjects where class engagement is rated below 3/5</div>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Avg Score</th><th>Rating</th></tr></thead>
+      <tbody>
+        {% for a in low_att2 %}
+        <tr>
+          <td class="fw-semi">{{ a.subject_name }}</td>
+          <td>{{ a.avg_score }}/5</td>
+          <td>
+            <span class="att-stars">
+              {% for i in range(1, 6) %}{{ '★' if i <= a.avg_score | round else '☆' }}{% endfor %}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% if not low_att and not low_marks and not low_att2 %}
+<div class="empty-state anim-2">
+  <div class="empty-icon">🎉</div>
+  <p>No alerts at this time. Your academic performance looks great!</p>
+</div>
+{% endif %}
+{% endblock %}
