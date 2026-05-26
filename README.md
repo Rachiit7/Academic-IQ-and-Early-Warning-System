@@ -53,8 +53,8 @@ Automated academic status alerts:
 # Tech Stack
 
 | Layer              | Technology |
-
-| Backend            | Python 3 · Flask 3.0 |
+|------------------- |------------|
+|| Backend            | Python 3 · Flask 3.0 |
 | Database           | SQLite (via `sqlite3` stdlib) |
 | Frontend           | HTML5 · Vanilla CSS (custom design system) |
 | Charts             | Chart.js 4.4 (CDN) |
@@ -120,7 +120,7 @@ Murari/
   # Demo Accounts
 
 |   Role   |         Email           |   Password   |         Notes             |
-
+|----------|-------------------------|--------------|---------------------------|
 | Admin    | admin@school.edu      | admin123   | Full system access        |
 | Faculty  | dr.smith@school.edu   | faculty123 | Maths & Physics           |
 | Faculty  | prof.jones@school.edu | faculty123 | Chemistry, English, CS    |
@@ -133,7 +133,7 @@ Murari/
  # Sample Dataset
 
 |      Category         |               Count                    |
-
+|-----------------------|----------------------------------------|
 | Students              | 5                                      |
 | Faculty               | 2                                      |
 | Subjects              | 5                                      |
@@ -163,7 +163,7 @@ attentiveness    — id, student_id, subject_id, date, score (1-5), notes
 # API Endpoints
 
 |        Endpoint           |  Role   |            Description                         |
-
+|---------------------------|---------|------------------------------------------------|
 | GET /api/student/charts   | Student | JSON for attendance + marks chart data         |
 | GET /api/admin/charts     | Admin   | JSON for status counts + student comparison    |
 | GET /api/faculty/charts   | Faculty | JSON for student attendance + marks comparison |
