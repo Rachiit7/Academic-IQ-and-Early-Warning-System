@@ -2,12 +2,6 @@
 AcademIQ is a smart academic monitoring platform designed to help institutions track student attendance, academic performance, and classroom engagement in real time. The system automatically identifies academically at-risk students and provides role-based dashboards for students, faculty members, and administrators.
 The platform focuses on improving academic transparency, enabling early intervention, and simplifying academic management through interactive analytics and automated warning systems.
 
-# Screenshots
-
-| Login | Admin Dashboard | Student Red Zone |
-
-| Dark-themed login with demo credentials | 7 stat cards, risk donut, comparison chart | Critical alert banner + 3 subject charts |
-
 # Features
 
 # Student Portal
@@ -120,16 +114,16 @@ Murari/
 
   # Demo Accounts
 
-|   Role   |         Email           |   Password   |         Notes             |
-|----------|-------------------------|--------------|---------------------------|
-| Admin    | admin@school.edu      | admin123   | Full system access        |
-| Faculty  | dr.smith@school.edu   | faculty123 | Maths & Physics           |
-| Faculty  | prof.jones@school.edu | faculty123 | Chemistry, English, CS    |
-| Student  | alice@school.edu      | student123 | Safe — 93% att, 87% marks |
-| Student  | bob@school.edu        | student123 | Warning — low marks       |
-| Student  | charlie@school.edu    | student123 | Warning — low attendance  |
-| Student  | diana@school.edu      | student123 | **Critical Red Zone**     |
-| Student  | ethan@school.edu      | student123 | Safe — 88% att, 73% marks |
+|   Role   |         Email           |   Password   |         Notes               |
+|----------|-------------------------|--------------|---------------------------  |
+| Admin    | admin@school.edu        | admin123     | Full system access          |
+| Faculty  | dr.smith@school.edu     | faculty123   | Maths & Physics             |
+| Faculty  | prof.jones@school.edu   | faculty123   | Chemistry, English, CS      |
+| Student  | alice@school.edu        | student123   | Safe — 93% att, 87% marks   |
+| Student  | bob@school.edu          | student123   | Warning — low marks         |
+| Student  | charlie@school.edu      | student123   | Warning — low attendance    |
+| Student  | diana@school.edu        | student123   | **Critical Red Zone**       |
+| Student  | ethan@school.edu        | student123  | Safe — 88% att, 73% marks    |
 
  # Sample Dataset
 
